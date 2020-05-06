@@ -1,5 +1,7 @@
 library(shiny)
 
+setwd("../shiny")
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -22,17 +24,24 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    library(wordcloud)
+    
+    
+    #source("../R/pre_shiny.R")
+    
     
     output$distPlot <- renderPlot({
         
+        library(wordcloud)
         
-        tbl <- readRDS("for_shiny.rds")
+        tbl <- readRDS("for_shiny_0.rds")
         
-        # if (input$hashtag == "#COVID") {
-        #     tbl <- tbl
-        # }
+        if (input$hashtag == "#COVID19") {
+            tbl <- readRDS("for_shiny_0.rds")
+        } else if (input$hashtag == "#COVID-19") {
+            tbl <- readRDS("for_shiny_2.rds")
+        } else if (input$hashtag == "#COVID_19") {
+            tbl <- readRDS("for_shiny_3.rds")
+        }
 
         wordcloud(tbl$wordNames, tbl$wordCounts, max.words=50)
         
@@ -42,3 +51,5 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+# https://manav003.shinyapps.io/shiny/

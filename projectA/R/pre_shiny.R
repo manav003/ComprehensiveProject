@@ -64,72 +64,81 @@ COVID2_tbl <- read.csv("temp_output/COVID2_tbl.csv")
 COVID3_tbl <- read.csv("temp_output/COVID3_tbl.csv")
 
 
-covid0CP <- VCorpus(VectorSource(COVID0_tbl$text)) 
+clean <- function(tbl, nameBit) {
+  covid0CP <- VCorpus(VectorSource(tbl$text)) 
+  
+  covid0CP <- tm_map(covid0CP, PlainTextDocument)
+  
+  # below line removes all hashtags
+  covid0CP <- tm_map(covid0CP, content_transformer( (function(x) { 
+    str_remove_all( x, pattern = "#+[a-zA-Z0-9(_)]{0,}")
+  })))
+  
+  
+  covid0CP<-tm_map(covid0CP, content_transformer(replace_abbreviation))
+  covid0CP<-tm_map(covid0CP, content_transformer(replace_contraction))
+  covid0CP<-tm_map(covid0CP, content_transformer(str_to_lower))
+  covid0CP<-tm_map(covid0CP, removeNumbers)
+  covid0CP<-tm_map(covid0CP, removePunctuation)
+  
+  #below line removes all hashtags that begin with or are web URLS
+  covid0CP <- tm_map(covid0CP, content_transformer( (function(x) {
+    str_remove_all( x, pattern = "http[a-zA-Z0-9(_)]{0,}")
+  })))
+  
+  
+  # below line removes all stopwords as well as the word 'psychology', as that
+  #is the hashtag term that was searched for, so that doesn't add meaning to
+  #our analysis
+  covid0CP <- tm_map(covid0CP, removeWords, c(stopwords("en"), "covid"))
+  covid0CP <- tm_map(covid0CP, stripWhitespace)
+  covid0CP <- tm_map(covid0CP, content_transformer(lemmatize_strings))
+  
+  
+  #WHAT DOES HE MEAN BY N GRAM???
+  # myTokenizer <- function(x) {
+  #   NGramTokenizer(x, Weka_control(min = 1, max = 2))
+  # }
+  # 
+  # twitter_dtm <- DocumentTermMatrix(twitter_cp,
+  #                                   control = list(tokenize = myTokenizer))
+  
+  
+  covid0_dtm <- DocumentTermMatrix(covid0CP)
+  covid0_slimmed_dtm <- removeSparseTerms(covid0_dtm, .99) #sparsity term of 0.99, otherwise I am left with too few terms
+  
+  tokenCounts <- apply(covid0_dtm, 1, sum)
+  covid0_dtm <- covid0_dtm[tokenCounts > 0, ]
+  
+  DTM.matrix <- as.matrix(covid0_dtm)
+  
+  dropped_tbl <- tbl[tokenCounts > 0, ]
+  
+  
+  
+  
+  tbl <- as_tibble(DTM.matrix)
+  
+  
+  wordCounts <- colSums(tbl)
+  wordNames <- names(tbl)
+  wordcloud(wordNames, wordCounts, max.words=50)
+  
+  
+  wordcloud_tbl <- tibble(wordNames = names(tbl), wordCounts = colSums(tbl))
+  wordcloud(wordcloud_tbl$wordNames, wordcloud_tbl$wordCounts, max.words=50)
+  
+  
+  name <- paste0("../shiny/for_shiny", nameBit, ".rds")
+  
+  saveRDS(wordcloud_tbl, name)
+  
+}
 
-covid0CP <- tm_map(covid0CP, PlainTextDocument)
-
-# below line removes all hashtags
-covid0CP<-tm_map(covid0CP, content_transformer( (function(x) { 
-  str_remove_all( x, pattern = "#+[a-zA-Z0-9(_)]{0,}")
-})))
-
-
-covid0CP<-tm_map(covid0CP, content_transformer(replace_abbreviation))
-covid0CP<-tm_map(covid0CP, content_transformer(replace_contraction))
-covid0CP<-tm_map(covid0CP, content_transformer(str_to_lower))
-covid0CP<-tm_map(covid0CP, removeNumbers)
-covid0CP<-tm_map(covid0CP, removePunctuation)
-
-#below line removes all hashtags that begin with or are web URLS
-covid0CP<-tm_map(covid0CP, content_transformer( (function(x) {
-  str_remove_all( x, pattern = "http[a-zA-Z0-9(_)]{0,}")
-})))
-
-
-# below line removes all stopwords as well as the word 'psychology', as that
-#is the hashtag term that was searched for, so that doesn't add meaning to
-#our analysis
-covid0CP<-tm_map(covid0CP, removeWords, c(stopwords("en"), "covid"))
-covid0CP<-tm_map(covid0CP, stripWhitespace)
-covid0CP<-tm_map(covid0CP, content_transformer(lemmatize_strings))
-
-
-#WHAT DOES HE MEAN BY N GRAM???
-# myTokenizer <- function(x) {
-#   NGramTokenizer(x, Weka_control(min = 1, max = 2))
-# }
-# 
-# twitter_dtm <- DocumentTermMatrix(twitter_cp,
-#                                   control = list(tokenize = myTokenizer))
-
-
-covid0_dtm <- DocumentTermMatrix(covid0CP)
-covid0_slimmed_dtm <- removeSparseTerms(covid0_dtm, .99) #sparsity term of 0.99, otherwise I am left with too few terms
-
-tokenCounts <- apply(covid0_dtm, 1, sum)
-covid0_dtm <- covid0_dtm[tokenCounts > 0, ]
-
-DTM.matrix <- as.matrix(covid0_dtm)
-
-dropped_tbl <- COVID0_tbl[tokenCounts > 0, ]
-
-
-
-
-COVID0_tbl <- as_tibble(DTM.matrix)
-
-
-wordCounts <- colSums(COVID0_tbl)
-wordNames <- names(COVID0_tbl)
-wordcloud(wordNames, wordCounts, max.words=50)
-
-
-wordcloud_tbl <- tibble(wordNames = names(COVID0_tbl), wordCounts = colSums(COVID0_tbl))
-wordcloud(wordcloud_tbl$wordNames, wordcloud_tbl$wordCounts, max.words=50)
-
-
-
-saveRDS(wordcloud_tbl, "../shiny/for_shiny.rds")
+clean(COVID0_tbl, "_0")
+clean(COVID1_tbl, "_1")
+clean(COVID2_tbl, "_2")
+clean(COVID3_tbl, "_3")
 
 
 # Analysis

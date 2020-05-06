@@ -1,0 +1,10 @@
+name: shiny
+title:
+username:
+account: manav003
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1985834
+bundleId: 3112489
+url: https://manav003.shinyapps.io/shiny/
+when: 1588795461.76277
