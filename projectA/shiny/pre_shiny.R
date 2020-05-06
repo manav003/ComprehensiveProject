@@ -1,6 +1,7 @@
 # R Studio API
-library(rstudioapi)
-setwd(dirname(getActiveDocumentContext()$path))
+# library(rstudioapi)
+# setwd(dirname(getActiveDocumentContext()$path))
+
 
 # Libraries
 library(twitteR)
@@ -9,48 +10,47 @@ library(tm)
 library(qdap)
 library(textstem)
 library(RWeka)
-library(wordcloud)
 
-randText <- function(x) {
-  lineNum <- sample(1:length(x), 1)
-  print(lineNum)
-  x[[lineNum]]$content
-}
+# randText <- function(x) {
+#   lineNum <- sample(1:length(x), 1)
+#   print(lineNum)
+#   x[[lineNum]]$content
+# }
 
 # Data Import and Cleaning
 
-# api <- "rN5sTV6MAEHLVGwLfL2GeVd7J"
-# secretKey <- "uM6NZknlicOfcePx5wu0bkYGZ1rne28QyOSnmttH8NW4af86P8"
-# token <- "1244697675271815168-V2BZra642W8OxO8BQ3ohj05CCGRjmY"
-# secretToken <- "NqueU63g7QSei8LAyij7JwTH4ei5OotYLzyZCLVr1pW9s"
-# 
-# setup_twitter_oauth(api, secretKey, token, secretToken)
-# 
-# # Now I am pulling the last 500 tweets for each of the 4 hashtags
-# 
-# COVID0_tbl <- searchTwitter("#COVID", 500) %>%
-#   strip_retweets() %>%
-#   twListToDF()
-# COVID0_tbl$text <- COVID0_tbl$text %>%
-#   iconv("UTF-8", "ASCII", sub="")
-# 
-# COVID1_tbl <- searchTwitter("#COVID19", 500) %>%
-#   strip_retweets() %>%
-#   twListToDF()
-# COVID1_tbl$text <- COVID1_tbl$text %>%
-#   iconv("UTF-8", "ASCII", sub="")
-# 
-# COVID2_tbl <- searchTwitter("#COVID-19", 500) %>%
-#   strip_retweets() %>%
-#   twListToDF()
-# COVID2_tbl$text <- COVID2_tbl$text %>%
-#   iconv("UTF-8", "ASCII", sub="")
-# 
-# COVID3_tbl <- searchTwitter("#COVID_19", 500) %>%
-#   strip_retweets() %>%
-#   twListToDF()
-# COVID3_tbl$text <- COVID3_tbl$text %>%
-#   iconv("UTF-8", "ASCII", sub="")
+api <- "rN5sTV6MAEHLVGwLfL2GeVd7J"
+secretKey <- "uM6NZknlicOfcePx5wu0bkYGZ1rne28QyOSnmttH8NW4af86P8"
+token <- "1244697675271815168-V2BZra642W8OxO8BQ3ohj05CCGRjmY"
+secretToken <- "NqueU63g7QSei8LAyij7JwTH4ei5OotYLzyZCLVr1pW9s"
+
+setup_twitter_oauth(api, secretKey, token, secretToken)
+
+# Now I am pulling the last 500 tweets for each of the 4 hashtags
+
+COVID0_tbl <- searchTwitter("#COVID", 100) %>%
+  strip_retweets() %>%
+  twListToDF()
+COVID0_tbl$text <- COVID0_tbl$text %>%
+  iconv("UTF-8", "ASCII", sub="")
+
+COVID1_tbl <- searchTwitter("#COVID19", 100) %>%
+  strip_retweets() %>%
+  twListToDF()
+COVID1_tbl$text <- COVID1_tbl$text %>%
+  iconv("UTF-8", "ASCII", sub="")
+
+COVID2_tbl <- searchTwitter("#COVID-19", 100) %>%
+  strip_retweets() %>%
+  twListToDF()
+COVID2_tbl$text <- COVID2_tbl$text %>%
+  iconv("UTF-8", "ASCII", sub="")
+
+COVID3_tbl <- searchTwitter("#COVID_19", 100) %>%
+  strip_retweets() %>%
+  twListToDF()
+COVID3_tbl$text <- COVID3_tbl$text %>%
+  iconv("UTF-8", "ASCII", sub="")
 
 
 # write.csv(COVID0_tbl, "temp_output/COVID0_tbl.csv")
@@ -58,10 +58,10 @@ randText <- function(x) {
 # write.csv(COVID2_tbl, "temp_output/COVID2_tbl.csv")
 # write.csv(COVID3_tbl, "temp_output/COVID3_tbl.csv")
 
-COVID0_tbl <- read.csv("temp_output/COVID0_tbl.csv")
-COVID1_tbl <- read.csv("temp_output/COVID1_tbl.csv")
-COVID2_tbl <- read.csv("temp_output/COVID2_tbl.csv")
-COVID3_tbl <- read.csv("temp_output/COVID3_tbl.csv")
+# COVID0_tbl <- read.csv("temp_output/COVID0_tbl.csv")
+# COVID1_tbl <- read.csv("temp_output/COVID1_tbl.csv")
+# COVID2_tbl <- read.csv("temp_output/COVID2_tbl.csv")
+# COVID3_tbl <- read.csv("temp_output/COVID3_tbl.csv")
 
 
 clean <- function(tbl, nameBit) {
@@ -120,13 +120,13 @@ clean <- function(tbl, nameBit) {
   tbl <- as_tibble(DTM.matrix)
   
   
-  wordCounts <- colSums(tbl)
-  wordNames <- names(tbl)
-  wordcloud(wordNames, wordCounts, max.words=50)
+  # wordCounts <- colSums(tbl)
+  # wordNames <- names(tbl)
+  # wordcloud(wordNames, wordCounts, max.words=50)
   
   
   wordcloud_tbl <- tibble(wordNames = names(tbl), wordCounts = colSums(tbl))
-  wordcloud(wordcloud_tbl$wordNames, wordcloud_tbl$wordCounts, max.words=50)
+  #wordcloud(wordcloud_tbl$wordNames, wordcloud_tbl$wordCounts, max.words=50)
   
   
   name <- paste0("../shiny/for_shiny", nameBit, ".rds")
@@ -135,10 +135,13 @@ clean <- function(tbl, nameBit) {
   
 }
 
-clean(COVID0_tbl, "_0")
-clean(COVID1_tbl, "_1")
-clean(COVID2_tbl, "_2")
-clean(COVID3_tbl, "_3")
+# clean(COVID0_tbl, "_0")
+# clean(COVID1_tbl, "_1")
+# clean(COVID2_tbl, "_2")
+# clean(COVID3_tbl, "_3")
+
+
+
 
 
 # Analysis
