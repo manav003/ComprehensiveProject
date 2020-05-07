@@ -28,25 +28,25 @@ setup_twitter_oauth(api, secretKey, token, secretToken)
 
 # Now I am pulling the last 500 tweets for each of the 4 hashtags
 
-COVID0_tbl <- searchTwitter("#COVID", 100) %>%
+COVID0_tbl <- searchTwitter("#COVID", 500) %>%
   strip_retweets() %>%
   twListToDF()
 COVID0_tbl$text <- COVID0_tbl$text %>%
   iconv("UTF-8", "ASCII", sub="")
 
-COVID1_tbl <- searchTwitter("#COVID19", 100) %>%
+COVID1_tbl <- searchTwitter("#COVID19", 500) %>%
   strip_retweets() %>%
   twListToDF()
 COVID1_tbl$text <- COVID1_tbl$text %>%
   iconv("UTF-8", "ASCII", sub="")
 
-COVID2_tbl <- searchTwitter("#COVID-19", 100) %>%
+COVID2_tbl <- searchTwitter("#COVID-19", 500) %>%
   strip_retweets() %>%
   twListToDF()
 COVID2_tbl$text <- COVID2_tbl$text %>%
   iconv("UTF-8", "ASCII", sub="")
 
-COVID3_tbl <- searchTwitter("#COVID_19", 100) %>%
+COVID3_tbl <- searchTwitter("#COVID_19", 500) %>%
   strip_retweets() %>%
   twListToDF()
 COVID3_tbl$text <- COVID3_tbl$text %>%
@@ -107,6 +107,8 @@ clean <- function(tbl, nameBit) {
   covid0_dtm <- DocumentTermMatrix(covid0CP)
   covid0_slimmed_dtm <- removeSparseTerms(covid0_dtm, .99) #sparsity term of 0.99, otherwise I am left with too few terms
   
+  
+  
   tokenCounts <- apply(covid0_dtm, 1, sum)
   covid0_dtm <- covid0_dtm[tokenCounts > 0, ]
   
@@ -135,10 +137,12 @@ clean <- function(tbl, nameBit) {
   
 }
 
-# clean(COVID0_tbl, "_0")
-# clean(COVID1_tbl, "_1")
-# clean(COVID2_tbl, "_2")
-# clean(COVID3_tbl, "_3")
+clean(COVID0_tbl, "_0")
+clean(COVID1_tbl, "_1")
+clean(COVID2_tbl, "_2")
+clean(COVID3_tbl, "_3")
+
+
 
 
 

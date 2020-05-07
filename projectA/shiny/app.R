@@ -17,7 +17,8 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+           plotOutput("distPlot"),
+           tableOutput("dataset")
         )
     )
 )
@@ -33,12 +34,6 @@ server <- function(input, output) {
     library(qdap)
     library(textstem)
     library(RWeka)
-
-    randText <- function(x) {
-        lineNum <- sample(1:length(x), 1)
-        print(lineNum)
-        x[[lineNum]]$content
-    }
 
     # Data Import and Cleaning
 
@@ -81,6 +76,70 @@ server <- function(input, output) {
     clean(COVID2_tbl, "_2")
     clean(COVID3_tbl, "_3")
     
+    tbl0 <- readRDS("for_shiny_0.rds")
+    tbl1 <- readRDS("for_shiny_1.rds")
+    tbl2 <- readRDS("for_shiny_2.rds")
+    tbl3 <- readRDS("for_shiny_3.rds")
+    
+    # list <- list(tbl0, tbl1, tbl2, tbl3)
+    # 
+    # matchesOver5 <- vector(mode="numeric")#, length=length(list))
+    # 
+    # for (i in 1:length(list)) {
+    #     
+    #     if ((i+1) <= length(list)){
+    #         for (j in i+1:length(list)) {
+    #             tbl <- list[[i]]
+    #             tblNext <- list[[j]]
+    #             
+    #             matchesOver5[i] <- tbl[tbl$wordCounts > 5, ] %>%
+    #                 inner_join(tblNext[tblNext$wordCounts > 5, ], by = "wordNames") %>% 
+    #                 nrow() %>% 
+    #                 as.numeric()
+    #             print("j")
+    #             print(j)
+    #         }
+    #         print("i")
+    #         print(i)
+    #     }
+    # }
+    
+    
+    tbl_01 <- tbl0[tbl0$wordCounts > 5, ] %>%
+        inner_join(tbl1[tbl1$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    tbl_02 <- tbl0[tbl0$wordCounts > 5, ] %>%
+        inner_join(tbl2[tbl2$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    tbl_03 <- tbl0[tbl0$wordCounts > 5, ] %>%
+        inner_join(tbl3[tbl3$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    tbl_12 <- tbl1[tbl1$wordCounts > 5, ] %>%
+        inner_join(tbl2[tbl2$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    tbl_13 <- tbl1[tbl1$wordCounts > 5, ] %>%
+        inner_join(tbl3[tbl3$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    tbl_23 <- tbl2[tbl2$wordCounts > 5, ] %>%
+        inner_join(tbl3[tbl3$wordCounts > 5, ], by = "wordNames") %>% 
+        nrow()
+    
+    comparisons <- c("COVID:COVID19",
+                    "COVID:COVID-19", 
+                    "COVID:COVID_19", 
+                    "COVID19:COVID-19", 
+                    "COVID19:COVID_19", 
+                    "COVID-19:COVID_19")
+    numMatchesOver5 <- c(tbl_01, tbl_02, tbl_03, tbl_12, tbl_13, tbl_23)
+    
+    summaryTbl <- tibble(comparisons, numMatchesOver5)
+        
+    
     
     output$distPlot <- renderPlot({
         
@@ -99,6 +158,10 @@ server <- function(input, output) {
         wordcloud(tbl$wordNames, tbl$wordCounts, max.words=50, scale=c(2,0.25))
         
         
+    })
+    
+    output$dataset <- renderTable({
+        tbl <- summaryTbl
     })
 }
 
