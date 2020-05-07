@@ -18,7 +18,8 @@ ui <- fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
            plotOutput("distPlot"),
-           tableOutput("dataset")
+           tableOutput("dataset"),
+           plotOutput("barchart")
         )
     )
 )
@@ -138,7 +139,20 @@ server <- function(input, output) {
     numMatchesOver5 <- c(tbl_01, tbl_02, tbl_03, tbl_12, tbl_13, tbl_23)
     
     summaryTbl <- tibble(comparisons, numMatchesOver5)
+    
+    
+    forBar <- tbl0 %>%
+        inner_join(tbl1, by = "wordNames") %>% 
+        inner_join(tbl2, by = "wordNames") %>% 
+        inner_join(tbl3, by = "wordNames") %>% 
+        mutate(sum = rowSums(.[2:5])) %>% 
+        select(wordNames, sum)
         
+    barchart <- forBar %>%
+        arrange(desc(sum)) %>%
+        top_n(20) %>%
+        mutate(wordNames = reorder(wordNames, sum)) %>%
+        ggplot(aes(x=wordNames,y=sum)) + geom_col() + coord_flip()
     
     
     output$distPlot <- renderPlot({
@@ -162,6 +176,10 @@ server <- function(input, output) {
     
     output$dataset <- renderTable({
         tbl <- summaryTbl
+    })
+    
+    output$barchart <- renderPlot({
+        barchart
     })
 }
 
