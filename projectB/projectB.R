@@ -106,11 +106,23 @@ df <- tibble("ArticleTitle" = allTitleText, "AuthorList" = allAuthorsText, "Jour
 
 #there are 240 results, 10 per page
 
-
-
-
-
-# Analysis
-
-
 # Visualization
+
+topJournals <- df %>%
+  group_by(JournalTitle) %>% 
+  count() %>% 
+  drop_na() %>% 
+  arrange(desc(n))
+  # top_n(10)
+
+topJournals <- topJournals[1:10,]
+
+plot <- df %>% 
+  right_join(topJournals, by = "JournalTitle") %>% 
+  mutate(Year = as.numeric(Year)) %>%
+  select(Year) %>% 
+  #select(-n) %>% 
+  count(Year) %>% 
+  ggplot(aes(x = Year, y = n)) + geom_point()
+
+plot
