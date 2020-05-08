@@ -24,24 +24,8 @@ library(caret)
 
 I am using data from the **The 1996 Topical Module: Emotions** that I am getting from the GSS site (http://gss.norc.org/get-the-data/spss). I chose this data set as it is an extremely large, publicly available data set on a variety of psychological queries. From this specific data set, I would like to look at the questions which ask participants the number of days (within the last 7 days) that they've felt a certain emotion. From this, I would like to see if I can predict how many days they felt 'at ease' (which is one of the questions) from the number of days they felt all the other emotions ('couldn't shake the blues', 'outraged', 'happy', 'sad', 'ashamed', 'excited', 'lonely', 'fearful', 'overjoyed', 'worried', 'anxious', 'restless', 'mad', 'angry', 'embarrassed', and 'proud'). I have purposefully excluded certain emotions ('contented' and 'calm') that seemed to be synonyms for 'ease' (as they are highly correlated with each other). So my overall question would be, can the number of days that certain emotions were felt predict the number of days there was a feeling of being at-ease? 
 
-For this question, machine learning would be an appropriate approach as I want to be able to generalize the findings of my question to other similar data sets (data sets that have been generated in the same way). So my question is not specific to this data set as I am not just trying to find a model that appropriately models this one data set, but I am prioritizing generalizability. Here, I want to be able to predict out-of-sample as strongly as I can and equally well in the future. 
 
-
-- where does the data come from
-- why i chose this data set
-- what question i intend to answer
-- why machine learning is appropriate in this situation
-
-
-
-what algorithm will predict Y most consistently in other data sets that have similar kind of causal forces behind them (for data generated in the same way)
-
-
-
-here, we have discrete dvs, so its a classification problem (we are dealing with counts, numbers of days (so no fractional quantities))
-
-
-note: responses are counts with a range of 0 days to 7 days, whereas the data has a range of responses from 1 to 8; keep in mind for interpretation
+For this question, machine learning would be an appropriate approach as I want to be able to generalize the findings of my question to other similar data sets (data sets that have been generated in the same way). So my question is not specific to this data set as I am not just trying to find a model that appropriately models this one data set, but I am prioritizing generalizability. Here, I want to be able to predict out-of-sample as strongly as I can and equally well in the future.
 
 
 I began by importing this data set and selecting those variables (I have identified above). Then I cleaned the data set such that I do not have any observations which do not have a valid response for ATEASE, as ATEASE is what I am trying to predict. Then, I removed all observations that have invalid responses for all of the independent variables (turns out, there are no such observations). Then I checked the number of invalid responses I have which turned out to be 118. With the total number of observations being 1443, we can simply proceed as is. 
@@ -68,45 +52,15 @@ sum(is.na(clean))
 
 ```
 
-
+note: responses are counts with a range of 0 days to 7 days, whereas the data has a range of responses from 1 to 8, which is fine, but should be kept in mind
 
 
 ## Analysis
 
-I started by looking at the Classic ML Cheat Sheet to guide me through the process of choosing appropriate analyses. Following the path on the cheat sheet, I know that I have >50 samples, I am predicting a quantity (more specifically, a count), I have fewer than 100K samples, and I have a few features that should be considered as important. This leads me to look consider Lasso or ElasticNet. Depending on my interpretation of what the cheat sheet means by 'few features', I could have also considered Ridge regression.  Both Lasso and Ridge regression basically penalize really large predictor coefficients but in different ways - the weights calculated in Lasso are sum of the absolute values and in Ridge, its the sum of the squares of the weights. 
+I started by looking at the Classic ML Cheat Sheet to guide me through the process of choosing appropriate analyses. Following the path on the cheat sheet, I know that I have >50 samples, I am predicting a quantity (more specifically, a count), I have fewer than 100K samples, and I have a few features that should be considered as important. This leads me to look consider Lasso or ElasticNet. Depending on my interpretation of what the cheat sheet means by 'few features', I could have also considered Ridge regression.  Both Lasso and Ridge regression are basically the same, except for the way each penalizes really large predictor coefficients - the weights calculated in Lasso are sum of the absolute values and in Ridge, its the sum of the squares of the weights. Elastic net basically adds a new parameter, alpha, which indicates the blend of the two types of penalties (Lasso and Ridge). So if alpha is 1, then it is calculating the penalities 100% the Lasso way and if alpha is 0, it's 100% Ridge. 
 
+With this knowledge, I decided to use the Elastic Net ML model, as that, in a way, encompasses Lasso and Ridge. And to deal with the issue of running into local minima (in minimizing the results of the cost function), I decided to run a 10-fold cross validation. 
 
-goal of ML is to minimize the results of the cost function
-
-lasso, penalizes certain things from happening
-- penalize really big predictor coefficients
-- 2 hyperparameters
-- alpha is the balance between lasso and ridge
-- lambda is how big the penalty is
-
-
-lasso v ridge
-- basically same, but the way the weights are calculated in lasso are sum of the absolute values and in ridge its the sum of the squares of the weights
-
-
-
-elastic net
-- includes new hyperparameter alpha that basically splits up the two ways (one in lasso and one in ridge) of including weights; basically takes a proportion of each, and the proportion is defined as alpha
-  so if alpha equals 1, its 100% lasso, and vice versa
-
-
-To deal with problem of multiple local minima
-
-10 fold cross validation 
-- for every possible combination of 9 folds, create a model, and then predict its value for the 10th
-
-
-- why i chose the analytic strategy i did
-- what i found
-- why i interpreted it that why
-
-
-lets see if i can predict number of days of AT EASE from all the rest
 ```{r}
 #choosing 200 as a holdout size, as we have 1443 clean observations so 200 gives us a workable proportion of the total data
 holdout_indices <- sample(nrow(clean), 200)
@@ -134,18 +88,9 @@ elasticModel
 
 cor(predict(elasticModel, test_tbl, na.action = na.pass), test_tbl$ATEASE)^2
 
-#predict(elastic, holdout, na.action = na.pass)
-
 ```
 
-We can see that the correlation is actually quite good! EXPLAIN MORE
+We can see that the correlation is alright, with an R^2 of 0.27. So I wouldn't say that the model performs exceptionally well out-of-sample, but it's decent. (I had also run this model on the same data set, except I also included the two emotion variables 'contented' and 'calm', and not surprisingly, I got a much larger correlation value).
 
-We can also see that the optimized values for alpha is 1 and for lambda is 0.026. From this, we know that this model was actually 100% Lasso (from alpha=1). Looking at the lambda values, we can see that the penalty value chosen was neither the smallest nor the largest. 
-
-## Visualization
-```{r}
-
-```
-
-
+We can also see that the optimized values for alpha is 1 and for lambda is 0.023. From this, we know that this model was actually 100% Lasso. Looking at the lambda values, we can see that the penalty value chosen was neither the smallest nor the largest, so an extreme penalty was not needed. 
 
