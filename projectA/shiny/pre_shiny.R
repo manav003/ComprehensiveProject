@@ -1,68 +1,7 @@
-# R Studio API
-# library(rstudioapi)
-# setwd(dirname(getActiveDocumentContext()$path))
+# Analysis (function for cleaning, used in app.R)
 
-
-# Libraries
-library(twitteR)
-library(tidyverse)
-library(tm)
-library(qdap)
-library(textstem)
-library(RWeka)
-
-# randText <- function(x) {
-#   lineNum <- sample(1:length(x), 1)
-#   print(lineNum)
-#   x[[lineNum]]$content
-# }
-
-# Data Import and Cleaning
-
-api <- "rN5sTV6MAEHLVGwLfL2GeVd7J"
-secretKey <- "uM6NZknlicOfcePx5wu0bkYGZ1rne28QyOSnmttH8NW4af86P8"
-token <- "1244697675271815168-V2BZra642W8OxO8BQ3ohj05CCGRjmY"
-secretToken <- "NqueU63g7QSei8LAyij7JwTH4ei5OotYLzyZCLVr1pW9s"
-
-setup_twitter_oauth(api, secretKey, token, secretToken)
-
-# Now I am pulling the last 500 tweets for each of the 4 hashtags
-
-COVID0_tbl <- searchTwitter("#COVID", 500) %>%
-  strip_retweets() %>%
-  twListToDF()
-COVID0_tbl$text <- COVID0_tbl$text %>%
-  iconv("UTF-8", "ASCII", sub="")
-
-COVID1_tbl <- searchTwitter("#COVID19", 500) %>%
-  strip_retweets() %>%
-  twListToDF()
-COVID1_tbl$text <- COVID1_tbl$text %>%
-  iconv("UTF-8", "ASCII", sub="")
-
-COVID2_tbl <- searchTwitter("#COVID-19", 500) %>%
-  strip_retweets() %>%
-  twListToDF()
-COVID2_tbl$text <- COVID2_tbl$text %>%
-  iconv("UTF-8", "ASCII", sub="")
-
-COVID3_tbl <- searchTwitter("#COVID_19", 500) %>%
-  strip_retweets() %>%
-  twListToDF()
-COVID3_tbl$text <- COVID3_tbl$text %>%
-  iconv("UTF-8", "ASCII", sub="")
-
-
-# write.csv(COVID0_tbl, "temp_output/COVID0_tbl.csv")
-# write.csv(COVID1_tbl, "temp_output/COVID1_tbl.csv")
-# write.csv(COVID2_tbl, "temp_output/COVID2_tbl.csv")
-# write.csv(COVID3_tbl, "temp_output/COVID3_tbl.csv")
-
-# COVID0_tbl <- read.csv("temp_output/COVID0_tbl.csv")
-# COVID1_tbl <- read.csv("temp_output/COVID1_tbl.csv")
-# COVID2_tbl <- read.csv("temp_output/COVID2_tbl.csv")
-# COVID3_tbl <- read.csv("temp_output/COVID3_tbl.csv")
-
+#I have decided to create a function to do the cleaning process, as I need to do the same steps for each of the 4 twitter searches
+#I have decided to keep this function in a separate R file so that app.R doesn't get too cluttered 
 
 clean <- function(tbl, nameBit) {
   covid0CP <- VCorpus(VectorSource(tbl$text)) 
@@ -94,17 +33,16 @@ clean <- function(tbl, nameBit) {
   covid0CP <- tm_map(covid0CP, stripWhitespace)
   covid0CP <- tm_map(covid0CP, content_transformer(lemmatize_strings))
   
+  # for N-gram tokenization, I decided to look for just unigrams and bigrams as those are the ones that mostly commonly appear (I went ahead and tried a max of 3, just to see if there may be some common 3 token phrases but, for the analyses here, tri-grams do not show up, so I kept a max of 2)
+  myTokenizer <- function(x) {
+    NGramTokenizer(x, Weka_control(min = 1, max = 2))
+  }
+
+  covid0_dtm <- DocumentTermMatrix(covid0CP,
+                                    control = list(tokenize = myTokenizer))
   
-  #WHAT DOES HE MEAN BY N GRAM???
-  # myTokenizer <- function(x) {
-  #   NGramTokenizer(x, Weka_control(min = 1, max = 2))
-  # }
-  # 
-  # twitter_dtm <- DocumentTermMatrix(twitter_cp,
-  #                                   control = list(tokenize = myTokenizer))
   
-  
-  covid0_dtm <- DocumentTermMatrix(covid0CP)
+  #covid0_dtm <- DocumentTermMatrix(covid0CP)
   covid0_slimmed_dtm <- removeSparseTerms(covid0_dtm, .99) #sparsity term of 0.99, otherwise I am left with too few terms
   
   
@@ -116,41 +54,14 @@ clean <- function(tbl, nameBit) {
   
   dropped_tbl <- tbl[tokenCounts > 0, ]
   
-  
-  
-  
   tbl <- as_tibble(DTM.matrix)
-  
-  
-  # wordCounts <- colSums(tbl)
-  # wordNames <- names(tbl)
-  # wordcloud(wordNames, wordCounts, max.words=50)
-  
   
   wordcloud_tbl <- tibble(wordNames = names(tbl), wordCounts = colSums(tbl))
   #wordcloud(wordcloud_tbl$wordNames, wordcloud_tbl$wordCounts, max.words=50)
-  
   
   name <- paste0("../shiny/for_shiny", nameBit, ".rds")
   
   saveRDS(wordcloud_tbl, name)
   
 }
-
-clean(COVID0_tbl, "_0")
-clean(COVID1_tbl, "_1")
-clean(COVID2_tbl, "_2")
-clean(COVID3_tbl, "_3")
-
-
-
-
-
-
-
-# Analysis
-
-
-# Visualization
-
 

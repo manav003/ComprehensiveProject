@@ -8,13 +8,11 @@ library(rvest)
 library(httr)
 
 # Data Import and Cleaning
-#papers3 <- read_html("https://scholar.google.com/scholar?start=20&q=%22covid-19%22+source:psychology&hl=en&as_sdt=0,48&as_vis=1")
-  
-  #"https://scholar.google.com/scholar?hl=en&as_sdt=0%2C48&q=%22covid-19%22+source%3Apsychology&btnG=")
 
+## READ ALL PAPERS IN, ONCE
 
+#there are 240 results, 10 per page
 
-## READ ALL PAPERS IN
 allPapers <- list()
 
 for (i in 1:24) { 
@@ -30,10 +28,9 @@ for (i in 1:24) {
 }
 
 
-## READ ALL TITLES IN, ALL LINKS IN 
+## READ ALL NECESSARY INFO IN
 
 allTitleText <- c()
-#allTitleText <- c(allTitleText, c(9))
 
 allLinksText <- c()
 
@@ -43,18 +40,14 @@ for (i in 1:length(allPapers)){
   allTitleNodes <- html_nodes(allPapers[[i]], ".gs_rt a")
   allTitleText <- c(allTitleText, html_text(allTitleNodes))
 
-  #allLinkNodes <- html_nodes(allPapers[[i]], ".gs_rt a")
   allLinksText <- c(allLinksText, html_attr(allTitleNodes, "href"))
   
   infoNodes <- html_nodes(allPapers[[i]], ".gs_a")
   allInfoText <- c(allInfoText, html_text(infoNodes))
-  
-  print(i)
 }
 
 
 #The instructions ask for 4 columns, but it's asking for 5 different pieces of data (article titles, author lists, journal title, year and link to each article), so I'm assuming you actually want 5 columns
-
 
 split <- str_split(allInfoText, "-", 3)
 
@@ -77,8 +70,6 @@ for (i in 1:length(journalYear)) {
     
     year[i] <- str_extract(journalYear[i], "([0-9]{4})")
     
-     
-    #year[i] <- tempSplit[[1]][2]
   } else {
     if(str_detect(journalYear[i], pattern = "[0-9]{4}", negate = FALSE)) { #if only year
       year[i] <- journalYear[i]
@@ -92,19 +83,6 @@ for (i in 1:length(journalYear)) {
 
 df <- tibble("ArticleTitle" = allTitleText, "AuthorList" = allAuthorsText, "JournalTitle" = journalName, "Year" = year, "Link" = allLinksText)
 
-# linkNodes <- html_nodes(allPapers[[24]], ".gs_rt a")
-# linkText <- html_attr(linkNodes, "href")
-
-
-#allPapers <- list(papers, papers2)
-#allPapers[[3]] <- papers3
-# str(allPapers)
-# str(comb)
-# 
-# str(papers2)
-
-
-#there are 240 results, 10 per page
 
 # Visualization
 
@@ -113,7 +91,6 @@ topJournals <- df %>%
   count() %>% 
   drop_na() %>% 
   arrange(desc(n))
-  # top_n(10)
 
 topJournals <- topJournals[1:10,]
 
@@ -121,7 +98,6 @@ plot <- df %>%
   right_join(topJournals, by = "JournalTitle") %>% 
   mutate(Year = as.numeric(Year)) %>%
   select(Year) %>% 
-  #select(-n) %>% 
   count(Year) %>% 
   ggplot(aes(x = Year, y = n)) + geom_point()
 

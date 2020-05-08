@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Libraries
 ```{r message=FALSE}
-#library(psych)
 library(tidyverse)
 library(Hmisc)
 library(caret)
